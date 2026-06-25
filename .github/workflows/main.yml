@@ -29,6 +29,29 @@ jobs:
         net localgroup administrators Ham7Office /add
         reg add "HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon\SpecialAccounts\UserList" /v Ham7Office /t REG_DWORD /d 0 /f
 
+    - name: Download, Extract, and Fix Permissions
+      run: |
+        $DirectLink = "https://github.com/Wosol33/Tailscale/releases/download/LWR152/librewolf_RDP.rar"
+        $DesktopPath = "C:\Users\Public\Desktop"
+        $Destination = "$DesktopPath\librewolf_RDP.rar"
+        
+        Write-Host "Downloading librewolf_RDP.rar..."
+        Invoke-WebRequest -Uri $DirectLink -OutFile $Destination
+        Write-Host "تم التحميل! جاري فك الضغط..."
+        
+        tar -xf $Destination -C $DesktopPath
+        Remove-Item $Destination -Force
+        
+        Write-Host "جاري تعديل الصلاحيات وإلغاء القراءة فقط..."
+        
+        Get-ChildItem -Path "$DesktopPath" -Recurse -Force -ErrorAction SilentlyContinue | ForEach-Object {
+            if ($_.IsReadOnly) { $_.IsReadOnly = $false }
+        }
+        
+        icacls "$DesktopPath\*" /grant "Ham7Office:(OI)(CI)F" /T /C /Q
+        
+        Write-Host "تم فك الضغط وتجهيز الصلاحيات بنجاح على سطح المكتب!"
+
     - name: Start Ngrok and display connection info
       run: |
         # Start Ngrok and capture output
